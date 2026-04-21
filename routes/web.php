@@ -1,13 +1,13 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FirstController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
 
-
+// --- Public Routes (Bisa diakses siapa saja) ---
 Route::get('/', function () {
-    // dd('hello world');
     return view('welcome');
 });
 
@@ -19,32 +19,39 @@ Route::get('/helo', function(){
     return 'helooo isb';
 })->name('helo');
 
-Route::get('/home', [HomeController::class, 'show'])->name('home');
-
-Route::get('/home/sum', [FirstController::class, 'sum'])->name('home.sum');
-
-Route::get('/home/multiply/{param1}/{param2?}', [FirstController::class, 'multiply'])->name('home.multiply');
-
 Route::get('/about', function(){
     return view('about');
 })->name('about');
 
-// Route::get('/store', function(){
-//     return view('store');
-// })->name('store');
+
+// --- Auth & Guest Routes ---
+Route::get('/login', [AuthController::class, 'show_login'])->name('login.show')->middleware('guest');
+Route::post('/login.auth', [AuthController::class, 'login_auth'])->name('login.auth');
 
 
-Route::get('/store', [StoreController::class, 'show'])->name('store');
+// --- Protected Routes (Harus Login / Middleware Auth) ---
+Route::middleware('auth')->group(function() {
+    
+    // Home Routes
+    Route::get('/home', [HomeController::class, 'show'])->name('home');
+    Route::get('/home/sum', [FirstController::class, 'sum'])->name('home.sum');
+    Route::get('/home/multiply/{param1}/{param2?}', [FirstController::class, 'multiply'])->name('home.multiply');
 
-Route::get('/product/insert-form', [StoreController::class, 'product_insert_form'])->name('product_insert_form');
-Route::post('/product/insert', [StoreController::class, 'insert_product'])->name('insert_product');
+    // --- Role: Admin & Owner Only ---
+    Route::middleware(['role:admin,owner'])->group(function() {
+        Route::get('/product/insert-form', [StoreController::class, 'product_insert_form'])->name('product_insert_form');
+        Route::post('/product/insert', [StoreController::class, 'insert_product'])->name('insert_product');
+        
+        Route::get('/product/edit/{product_id}', [StoreController::class, 'product_edit_form'])->name('product_edit_form');
+        Route::put('/product/edit/{product_id}', [StoreController::class, 'update_product'])->name('update_product');
+        Route::delete('/product/delete/{product_id}', [StoreController::class, 'delete_product'])->name('delete_product');
+    });
 
-// Baris 42
-Route::get('/product/edit/{product_id}', [StoreController::class, 'product_edit_form'])->name('product_edit_form');
+    // --- Role: Customer, Admin, & Owner ---
+    Route::middleware(['role:customer,admin,owner'])->group(function() {
+        Route::get('/store', [StoreController::class, 'show'])->name('store');
+    });
 
-// Baris 44
-
-// Ganti Route::post jadi Route::put
-Route::put('/product/edit/{product_id}', [StoreController::class, 'update_product'])->name('update_product');
-Route::delete('/product/delete/{product_id}', [StoreController::class, 'delete_product'])->name('delete_product');
-
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});

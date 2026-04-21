@@ -9,7 +9,11 @@
 
 @section('content')
     <h1>Store Page</h1>
-    <a href="{{ route('product_insert_form') }}" class="btn btn-primary">Insert New Product</a>
+    
+    {{-- Tombol Insert New Product dibungkus @can --}}
+    @can('insert-product')
+        <a href="{{ route('product_insert_form') }}" class="btn btn-primary mb-3">Insert New Product</a>
+    @endcan
     
     <div class="row row-cols-1 row-cols-md-3 g-4">
     @foreach ($products as $product)
@@ -22,21 +26,29 @@
                     <p class="card-text">Rp {{ number_format($product->price, 2) }}</p>
                     <p class="card-text">{{ $product->details }}</p>
                     
-                    <a href="{{ route('product_edit_form', $product->id) }}" class="btn btn-warning">Edit</a>
+                    {{-- Tombol Edit dibungkus @can --}}
+                    @can('edit-product')
+                        <a href="{{ route('product_edit_form', $product->id) }}" class="btn btn-warning">Edit</a>
+                    @endcan
 
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">
-                        Delete
-                    </button>
+                    {{-- Tombol Delete dibungkus @can --}}
+                    @can('delete-product')
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">
+                            Delete
+                        </button>
+                    @endcan
                 </div>
             </div>
         </div>
 
+        {{-- Modal Delete juga sebaiknya dibungkus agar tidak render di HTML jika tidak punya akses --}}
+        @can('delete-product')
         <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-start">
                         Are you sure you want to delete <strong>{{ $product->name }}</strong>?<br>
@@ -54,6 +66,7 @@
                 </div>
             </div>
         </div>
+        @endcan
     @endforeach
     </div>
 @endsection

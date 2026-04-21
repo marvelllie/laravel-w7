@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate; // Ditambahkan agar fungsi Gate tidak error
 
 class StoreController extends Controller
 {
@@ -23,6 +24,11 @@ class StoreController extends Controller
     }
 
     public function insert_product(Request $request){
+        // Tambahan Gate
+        if(!Gate::allows('insert-product')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'details' => 'nullable|string',
@@ -46,12 +52,11 @@ class StoreController extends Controller
             'image.mimes' => 'The image must be a file of type: jpeg, png, jpg.',
             'image.max' => 'The image may not be greater than 2048 kilobytes.',
         ]);
+        
         $imageName = null;
         if($request->hasFile('image')){
             $imageName = time(). '-'. $request->file('image')->getClientOriginalName();
             $request->file('image')->move(public_path('product_image'), $imageName);
-        
-
         }
 
         $product = new Product();
@@ -63,16 +68,19 @@ class StoreController extends Controller
         $product->image_path = $imageName;
         $product->save();
         return redirect()->route('store')->with('success','product added success');
-
-
     }
 
     public function product_edit_form($product_id){
         $product = Product::findOrFail($product_id);
         return view ('product.edit-form', ['product'=>$product,'product_categories'=>ProductCategory::get()]);
-        }
+    }
 
     public function update_product(Request $request, $product_id){
+        // Tambahan Gate
+        if(!Gate::allows('edit-product')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Validate the incoming request data
         $request->validate([
             'name' => 'required|string|max:255',
@@ -91,8 +99,7 @@ class StoreController extends Controller
             'image.image' => 'The uploaded file must be an image.',
             'image.mimes' => 'The image must be a file of type: jpg, jpeg, png.',
             'image.max' => 'The image may not be greater than 2MB.',
-         ]
-        );
+         ]);
 
         $product = Product::findOrFail($product_id);
 
@@ -119,6 +126,11 @@ class StoreController extends Controller
     }
 
     public function delete_product($product_id){
+        // Tambahan Gate
+        if(!Gate::allows('delete-product')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $product = Product::findOrFail($product_id);
         $product->delete(); // Karena sudah pakai SoftDeletes, ini otomatis mengisi deleted_at
 

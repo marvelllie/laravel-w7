@@ -14,7 +14,6 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        //
         DB::table('users')->insert([
             [
                 'name' => 'user1',
@@ -40,6 +39,12 @@ class UserSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]
+        ]);
+
+        DB::table('user_roles')->insert([
+            ['user_id' => 1, 'role' => 'customer', 'created_at' => now(), 'updated_at' => now()],
+            ['user_id' => 2, 'role' => 'customer', 'created_at' => now(), 'updated_at' => now()],
+            ['user_id' => 3, 'role' => 'admin', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }
